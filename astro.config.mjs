@@ -1,4 +1,6 @@
 import { defineConfig } from 'astro/config';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 export default defineConfig({
   // 你的 GitHub Pages 网址
@@ -7,5 +9,9 @@ export default defineConfig({
    base: '/simple_line_blog', 
   devToolbar: {
     enabled: false
+  },
+  markdown: {
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
   }
 });
