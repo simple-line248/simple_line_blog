@@ -1,0 +1,115 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// 通过 Vite 批量导入 src/projects/ 下的所有 Markdown 文件
+const projectFiles = Object.values(import.meta.glob('../projects/*.md', { eager: true }));
+
+// 按照日期进行降序排序 (让最新的项目排在最上面)
+projectFiles.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
+---
+
+<Layout title="项目 | My Space">
+<header class="page-header">
+<h1 class="page-title">Projects</h1>
+<p class="page-subtitle">做的一些项目。</p>
+</header>
+
+<section class="feed">
+{projectFiles.map((project: any) => (
+<article class="project-item">
+<div class="project-content">
+<h2 class="project-title">
+<a href={project.frontmatter.url} target="_blank" rel="noopener noreferrer">
+{project.frontmatter.title}
+<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="external-icon">
+<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+<polyline points="15 3 21 3 21 9"></polyline>
+<line x1="10" y1="14" x2="21" y2="3"></line>
+</svg>
+</a>
+</h2>
+<p class="project-desc">
+{project.frontmatter.description}
+</p>
+</div>
+</article>
+))}
+</section>
+</Layout>
+
+<style>
+.page-header {
+margin-bottom: 48px;
+}
+
+.page-title {
+font-size: 2rem;
+font-weight: 600;
+margin: 0 0 8px 0;
+letter-spacing: 0.5px;
+}
+
+.page-subtitle {
+font-size: 1rem;
+color: var(--text-muted);
+margin: 0;
+}
+
+.feed {
+display: flex;
+flex-direction: column;
+gap: 32px;
+margin-top: 10px;
+}
+
+.project-item {
+display: flex;
+padding-bottom: 32px;
+border-bottom: 1px solid var(--border-color);
+}
+
+.project-item:last-child {
+border-bottom: none;
+}
+
+.project-content {
+display: flex;
+flex-direction: column;
+flex: 1;
+}
+
+.project-title {
+font-size: 1.3rem;
+font-weight: 500;
+margin: 0 0 12px 0;
+letter-spacing: 0.5px;
+}
+
+.project-title a {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.project-title a:hover {
+opacity: 0.7;
+}
+
+.external-icon {
+color: var(--text-muted);
+transition: transform 0.2s ease;
+}
+
+.project-title a:hover .external-icon {
+transform: translate(2px, -2px);
+color: inherit;
+}
+
+.project-desc {
+font-size: 0.95rem;
+color: var(--text-muted);
+margin: 0;
+line-height: 1.6;
+}
+</style>

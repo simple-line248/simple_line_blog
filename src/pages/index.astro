@@ -1,11 +1,199 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// 使用 Vite 原生的高效导入方式替代已被新版废弃的 Astro.glob
+const posts = Object.values(import.meta.glob('./blog/*.md', { eager: true }));
+
+// 方案B：通过 Vite 批量导入 src/assets/ 下的所有可能用作封面的图片（支持主流格式）
+const images = import.meta.glob<{ default: ImageMetadata }>('/src/assets/*.{jpeg,jpg,png,gif,webp}');
+
+// 按照日期进行降序排序
+posts.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="首页 | My Space">
+	<header class="page-header">
+		<h1 class="page-title">Writing</h1>
+		<p class="page-subtitle">我的一些思考。</p>
+	</header>
+
+	<section class="feed">
+		{posts.map((post) => (
+			<article class="post-item">
+				<div class="post-thumbnail">
+					{(post as any).frontmatter.cover && images[(post as any).frontmatter.cover] ? (
+						<Image 
+							src={images[(post as any).frontmatter.cover]()} 
+							alt={(post as any).frontmatter.title} 
+							width={360} 
+							height={240} 
+							class="thumb-img" 
+						/>
+					) : (
+						<!-- SVG 占位兜底图 -->
+						<svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="thumb-icon"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+					)}
+				</div>
+				<div class="post-content">
+					<h2 class="post-title">
+						<a href={(post as any).url}>{(post as any).frontmatter.title}</a>
+						{(post as any).frontmatter.pinned && <span class="badge">置顶</span>}
+					</h2>
+					<p class="post-excerpt">
+						{/* 这里如果 frontmatter 里写了 description 会展示，没写就展示点默认占位内容 */}
+						{(post as any).frontmatter.description || "点击阅读完整内容..."}
+					</p>
+					<div class="post-tags">
+						{(post as any).frontmatter.tags?.map((tag: string) => (
+							<span class="tag"># {tag}</span>
+						))}
+					</div>
+				</div>
+			</article>
+		))}
+	</section>
 </Layout>
+
+<style>
+	.page-header {
+		margin-bottom: 48px;
+	}
+
+	.page-title {
+		font-size: 2rem;
+		font-weight: 600;
+		margin: 0 0 8px 0;
+		letter-spacing: 0.5px;
+	}
+
+	.page-subtitle {
+		font-size: 1rem;
+		color: var(--text-muted);
+		margin: 0;
+	}
+
+	.feed {
+		display: flex;
+		flex-direction: column;
+		/* 文章通过 border-bottom 分隔，缩小 gap 配合 padding */
+		gap: 32px; 
+		margin-top: 10px;
+	}
+
+	.post-item {
+		display: flex;
+		gap: 24px;
+		align-items: stretch;
+		padding-bottom: 32px;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.post-item:last-child {
+		border-bottom: none; /* 最后一项去掉下边框 */
+	}
+
+	.post-thumbnail {
+		width: 180px;
+		height: 120px;
+		flex-shrink: 0;
+		background: var(--element-bg); /* 使用响应暗黑模式的变量 */
+		border-radius: 8px; /* 柔和的圆角 */
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-muted);
+		transition: background 0.3s ease;
+	}
+
+	.post-item:hover .post-thumbnail {
+		background: var(--element-hover);
+	}
+
+	.thumb-img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: inherit; /* 完美继承父级圆角，不溢出 */
+		transition: transform 0.3s ease;
+	}
+
+	.post-item:hover .thumb-img {
+		transform: scale(1.05); /* 鼠标放上去时，图片会有非常轻微的呼吸放大效果 */
+	}
+
+	.post-content {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	.post-title {
+		font-size: 1.3rem;
+		font-weight: 500;
+		margin: 0 0 8px 0;
+		letter-spacing: 0.5px;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.post-title a {
+		transition: opacity 0.2s ease;
+	}
+
+	.post-title a:hover {
+		opacity: 0.6;
+	}
+
+	/* 截图里的深色高亮 Badge */
+	.badge {
+		background: var(--text-color);
+		color: var(--bg-color);
+		font-size: 0.7rem;
+		padding: 2px 8px;
+		border-radius: 4px;
+		font-weight: 500;
+	}
+
+	.post-excerpt {
+		font-size: 0.95rem;
+		color: var(--text-muted);
+		margin: 0 0 16px 0;
+		line-height: 1.6;
+	}
+
+	/* 标签容器：推到右下角 */
+	.post-tags {
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+		margin-top: auto; 
+	}
+
+	/* (1.B方案) 柔和圆角背景标签 */
+	.tag {
+		background: var(--element-bg);
+		color: var(--text-color);
+		font-size: 0.8rem;
+		padding: 4px 10px;
+		border-radius: 6px;
+		transition: background 0.2s ease;
+	}
+
+	.tag:hover {
+		background: var(--element-hover);
+	}
+
+	/* 响应式：屏幕变小时，缩略图放到上面去 */
+	@media (max-width: 600px) {
+		.post-item {
+			flex-direction: column;
+			gap: 16px;
+		}
+		.post-thumbnail {
+			width: 100%;
+			height: 160px;
+		}
+	}
+</style>

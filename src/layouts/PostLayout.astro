@@ -1,0 +1,604 @@
+---
+import { Image } from 'astro:assets';
+import avatarImg from '../assets/avatar.png';
+interface Props {
+	title?: string;
+	frontmatter?: {
+		title: string;
+		date: string;
+		description?: string;
+		tags?: string[];
+	};
+	headings?: { depth: number; slug: string; text: string }[];
+}
+
+const { title, frontmatter, headings = [] } = Astro.props;
+/* 如果有 frontmatter（通过 Markdown 传入），优先使用 frontmatter.title */
+const pageTitle = frontmatter?.title || title || "阅读文章";
+const publishDate = frontmatter?.date;
+const description = frontmatter?.description;
+const tags = frontmatter?.tags || [];
+const toc = headings.filter(h => h.depth > 1 && h.depth <= 3);
+
+// 提取所有文章，用于生成上一篇/下一篇底座
+const allPosts = Object.values(import.meta.glob('../pages/blog/*.md', { eager: true }));
+allPosts.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
+
+const currentIndex = allPosts.findIndex((post: any) => post.frontmatter.title === pageTitle);
+
+// 因为按时间降序(最新的在前面): 
+// 下一篇(较新的文章) index 应该 -1
+const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null; 
+// 上一篇(较早的文章) index 应该 +1
+const prevPost = currentIndex !== -1 && currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null; 
+---
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{pageTitle}</title>
+	</head>
+	<body>
+		<div class="reading-wrapper">
+			<!-- 极简的顶部悬浮导航，方便返回 -->
+			<header class="reading-nav">
+				<a href={import.meta.env.BASE_URL} class="back-link">
+					<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+					返回主页
+				</a>
+			</header>
+			
+			<div class="layout-grid">
+				<main class="reading-content">
+					{frontmatter && (
+						<div class="article-header">
+							<div class="badge-row">
+								{publishDate && <time class="badge date-badge" datetime={publishDate}>{publishDate}</time>}
+								{tags.map(tag => (
+									<span class="badge tag-badge">{tag}</span>
+								))}
+							</div>
+							<h1 class="geo-title">
+								<span class="geo-mark"></span>
+								{pageTitle}
+							</h1>
+							{description && <p class="article-desc">{description}</p>}
+							<hr class="header-divider" />
+						</div>
+					)}
+					<div class="prose">
+						<slot />
+						
+						<!-- 类似数学证明完毕的 Q.E.D 结束符 -->
+						<div class="article-end-mark">■</div>
+					</div>
+
+					<!-- 方案B底座：欢迎交流型（开源/社区感） -->
+					<div class="article-author-card">
+						<Image class="author-avatar" src={avatarImg} alt="SimpleLine" width={56} height={56} loading="eager" />
+						<div class="author-text">
+							<strong>博主：SimpleLine</strong>
+							<p>这里是我存放思考的“代码花园”。如果您对本文有任何建议，欢迎通过邮件 [ simpleline248@gmail.com ] 与我交流探讨。</p>
+							<div class="copyright-info">
+								&copy; {new Date().getFullYear()} Built with Astro
+							</div>
+						</div>
+					</div>
+
+					<!-- 方案2导航：两张独立卡片按钮，空缺时使用置灰不可点击卡片占位 -->
+					<div class="post-nav-grid">
+						{prevPost ? (
+							<a href={import.meta.env.BASE_URL + (prevPost as any).url.replace('/simple_line_blog', '')} class="nav-card">
+								<span class="nav-label">← 较早文章</span>
+								<span class="nav-title">{(prevPost as any).frontmatter.title}</span>
+							</a>
+						) : (
+							<div class="nav-card disabled">
+								<span class="nav-label">← 较早文章</span>
+								<span class="nav-title">已是第一篇</span>
+							</div>
+						)}
+						{nextPost ? (
+							<a href={import.meta.env.BASE_URL + (nextPost as any).url.replace('/simple_line_blog', '')} class="nav-card next">
+								<span class="nav-label">较新文章 →</span>
+								<span class="nav-title">{(nextPost as any).frontmatter.title}</span>
+							</a>
+						) : (
+							<div class="nav-card disabled next">
+								<span class="nav-label">较新文章 →</span>
+								<span class="nav-title">已是最新一篇</span>
+							</div>
+						)}
+					</div>
+				</main>
+				
+				{toc.length > 0 && (
+					<aside class="toc-sidebar">
+						<div class="toc-sticky">
+							<h3 class="toc-title">目录</h3>
+							<ul class="toc-list">
+								{toc.map(h => (
+									<li class={`toc-depth-${h.depth}`}>
+										<a href={`#${h.slug}`}>{h.text}</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					</aside>
+				)}
+			</div>
+		</div>
+
+		<!-- 复用之前的暗黑模式逻辑 -->
+		<script is:inline>
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+			if (theme === 'light') { document.documentElement.classList.remove('dark'); } 
+			else { document.documentElement.classList.add('dark'); }
+		</script>
+	</body>
+</html>
+
+<style is:global>
+	/* 导入全局变量以保持风格一致 */
+	:root {
+		--bg-color: #F8F7F3; /* 稍微深一点点的底色，为了衬托白边的纸张 */
+		--paper-bg: #FFFFFF; /* 纸张卡片底色 */
+		--paper-shadow: 0 8px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+		--text-color: #2C2C2C; 
+		--text-muted: #858585; 
+		--border-color: rgba(0, 0, 0, 0.06); 
+		--accent-color: #A94A42; /* 赭石红：有温度的斑驳感 */
+	}
+	html.dark {
+		--bg-color: #0E0E0E; /* 深黑底色 */
+		--paper-bg: #161616; /* 深灰卡片色 */
+		--paper-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+		--text-color: #E6E6E6; 
+		--text-muted: #8E8E8E; 
+		--border-color: rgba(255, 255, 255, 0.05); 
+		--accent-color: #C96155; /* 暗黑模式下的赭石红，稍亮点 */
+	}
+
+	* { box-sizing: border-box; }
+
+	html, body {
+		margin: 0;
+		padding: 0;
+		background-color: var(--bg-color);
+		color: var(--text-color);
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+		-webkit-font-smoothing: antialiased;
+		position: relative;
+	}
+
+	/* 添加自然噪点（Noise）增强温润纸张感 */
+	body::before {
+		content: "";
+		position: fixed;
+		top: 0; left: 0; width: 100vw; height: 100vh;
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+		opacity: 0.035; /* 极其微弱 */
+		pointer-events: none;
+		z-index: 9999;
+	}
+	html.dark body::before {
+		opacity: 0.05;
+	}
+
+	a { text-decoration: none; color: inherit; }
+
+	/* 方案B：居中的物理纸张卡片 */
+	.reading-wrapper {
+		max-width: 1150px; /* 把整体外围拓宽 */
+		margin: 0 auto;
+		padding: 0 20px;
+		min-height: 100vh;
+	}
+
+	.layout-grid {
+		display: flex;
+		align-items: flex-start;
+		gap: 40px; /* 卡片模式下缩小两列间距 */
+	}
+
+	.reading-nav {
+		padding: 40px 0 20px 0;
+	}
+
+	.back-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--text-muted);
+		font-size: 0.95rem;
+		transition: opacity 0.2s;
+	}
+
+	.back-link:hover {
+		opacity: 0.6;
+	}
+
+	.reading-content {
+		flex: 1;
+		max-width: 900px; /* 把白纸的宽度放大 （从 800px 加到了 900px）*/
+		background-color: var(--paper-bg);
+		box-shadow: var(--paper-shadow);
+		padding: 60px 70px 80px; /* 收缩一点内边距，给文本让出更多横向空间 */
+		border-radius: 12px;
+		border: 1px solid var(--border-color);
+		margin-bottom: 80px;
+		line-height: 1.8;
+		font-size: 1.1rem;
+	}
+	
+	/* 针对小屏幕优化纸张边距 */
+	@media (max-width: 768px) {
+		.reading-content {
+			padding: 40px 30px;
+		}
+	}
+
+	/* 目录 (TOC) 样式 */
+	.toc-sidebar {
+		width: 200px;
+		flex-shrink: 0;
+		display: none; /* 移动端默认隐藏 */
+	}
+
+	@media (min-width: 1000px) {
+		.toc-sidebar {
+			display: block;
+		}
+	}
+
+	.toc-sticky {
+		position: sticky;
+		top: 100px;
+	}
+
+	.toc-title {
+		font-size: 0.85rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--text-muted);
+		margin-bottom: 16px;
+	}
+
+	.toc-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		font-size: 0.9rem;
+	}
+
+	.toc-list li {
+		margin-bottom: 12px;
+		line-height: 1.4;
+	}
+
+	.toc-depth-3 {
+		padding-left: 1rem;
+		font-size: 0.85rem;
+	}
+
+	.toc-list a {
+		color: var(--text-muted);
+		transition: color 0.2s;
+	}
+
+	.toc-list a:hover {
+		color: var(--accent-color);
+	}
+
+	/* 给 Markdown 内容加点排版样式 - Scientific but warm */
+	.article-header {
+		margin-bottom: 3rem;
+	}
+
+	/* 徽章化设计 (Badges) */
+	.badge-row {
+		display: flex;
+		gap: 8px;
+		margin-bottom: 1.5rem;
+		flex-wrap: wrap;
+	}
+
+	.badge {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.75rem;
+		padding: 4px 8px;
+		border-radius: 4px;
+		letter-spacing: 0.05em;
+	}
+
+	.date-badge {
+		border: 1px solid var(--accent-color);
+		color: var(--accent-color);
+		font-weight: 500;
+	}
+
+	.tag-badge {
+		background: rgba(0, 0, 0, 0.04);
+		color: var(--text-muted);
+	}
+	html.dark .tag-badge {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* 结合几何与装饰色的标题 */
+	.geo-title {
+		display: flex;
+		position: relative;
+	}
+
+	.geo-mark {
+		position: absolute;
+		left: -24px;
+		top: 0.5em;
+		width: 8px;
+		height: 8px;
+		background-color: var(--accent-color);
+	}
+
+	.article-header h1 {
+		font-size: 2.5rem;
+		font-weight: 700;
+		margin: 0 0 1rem 0;
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+	}
+
+	.article-desc {
+		font-size: 1.2rem;
+		color: var(--text-muted);
+		margin-top: 0;
+		line-height: 1.6;
+		font-weight: 400;
+	}
+
+	.header-divider {
+		border: none;
+		height: 1px;
+		background: var(--border-color);
+		margin-top: 2.5rem;
+	}
+
+	/* 正文区排版 (Prose) */
+	.prose {
+		color: var(--text-color);
+	}
+
+	/* 方案Y：自动隐藏 Markdown 解析出的第一个重复的大标题 */
+	.prose > h1:first-of-type {
+		display: none;
+	}
+
+	.prose h1, .prose h2, .prose h3, .prose h4 {
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		margin-top: 2em;
+		margin-bottom: 1em;
+	}
+
+	.prose h2 { font-size: 1.5rem; }
+	.prose h3 { font-size: 1.25rem; }
+
+	.prose p, .prose li {
+		margin-top: 0;
+		margin-bottom: 1.5em;
+		line-height: 1.8;
+	}
+
+	.prose a {
+		color: var(--accent-color);
+		text-decoration: underline;
+		text-decoration-color: rgba(169, 74, 66, 0.3); /* 淡红色的下划线 */
+		text-underline-offset: 4px;
+		transition: text-decoration-color 0.2s ease, opacity 0.2s ease;
+	}
+	html.dark .prose a {
+		text-decoration-color: rgba(201, 97, 85, 0.3);
+	}
+
+	.prose a:hover {
+		text-decoration-color: var(--accent-color);
+	}
+
+	.prose blockquote {
+		margin: 2em 0;
+		padding: 1.2em 1.5em;
+		border-left: 3px solid var(--accent-color);
+		background-color: rgba(169, 74, 66, 0.03); /* 带点暖色的背景 */
+		color: var(--text-color);
+		border-radius: 0 8px 8px 0;
+		font-style: italic;
+	}
+	html.dark .prose blockquote {
+		background-color: rgba(201, 97, 85, 0.04);
+	}
+
+	.prose code {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		background-color: rgba(0, 0, 0, 0.04);
+		padding: 0.2em 0.4em;
+		border-radius: 4px;
+	}
+	html.dark .prose code {
+		background-color: rgba(255, 255, 255, 0.1);
+	}
+
+	.prose pre {
+		background-color: #1A1A1A;
+		color: #E6E6E6;
+		padding: 1.25em 1.5em;
+		border-radius: 8px;
+		overflow-x: auto;
+		margin: 2em 0;
+	}
+
+	.prose pre code {
+		background-color: transparent;
+		padding: 0;
+		font-size: 0.9em;
+		color: inherit;
+	}
+
+	.prose img {
+		max-width: 100%;
+		height: auto;
+		border-radius: 8px;
+		margin: 2em 0;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+	}
+	html.dark .prose img {
+		box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+	}
+	
+	.prose ul, .prose ol {
+		padding-left: 1.5em;
+		margin-bottom: 1.5em;
+	}
+	
+	.prose li {
+		margin-bottom: 0.5em;
+	}
+
+	/* 结束符：类似数学证明完毕的 Q.E.D 标志 */
+	.article-end-mark {
+		margin-top: 4rem;
+		text-align: right;
+		color: var(--accent-color);
+		font-size: 1.1rem;
+		opacity: 0.8;
+	}
+
+	/* 方案B底座：欢迎交流型 */
+	.article-author-card {
+		margin-top: 5rem;
+		padding: 2rem;
+		background-color: rgba(0, 0, 0, 0.02); /* 镂空轻色彩 */
+		border-radius: 8px;
+		border: 1px solid var(--border-color);
+		display: flex;
+		gap: 1.5rem;
+		align-items: center;
+	}
+	html.dark .article-author-card { background-color: rgba(255, 255, 255, 0.02); }
+
+	.author-avatar {
+		width: 56px; 
+		height: 56px;
+		border-radius: 50%;
+		background-color: var(--border-color);
+		flex-shrink: 0;
+	}
+
+	.author-text { flex: 1; }
+
+	.author-text strong {
+		font-size: 1.05rem; 
+		font-weight: 600;
+		display: block; 
+		margin-bottom: 0.4rem; 
+		color: var(--text-color); 
+	}
+
+	.author-text p { 
+		margin: 0 0 0.8rem 0; 
+		font-size: 0.95rem; 
+		color: var(--text-muted); 
+		line-height: 1.6;
+	}
+
+	.copyright-info { 
+		font-size: 0.8rem; 
+		color: var(--text-muted); 
+		font-family: ui-monospace, SFMono-Regular, Consolas, monospace; 
+		border-top: 1px dashed var(--border-color); 
+		padding-top: 0.8rem;
+		letter-spacing: 0.02em;
+	}
+
+	/* 方案2导航：独立的上一篇/下一篇卡片按钮 */
+	.post-nav-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 20px;
+		margin-top: 2rem;
+	}
+
+	.nav-card {
+		display: flex;
+		flex-direction: column;
+		padding: 1.5rem;
+		background-color: var(--bg-color); /* 借用外围的底色产生独立按键感 */
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		text-decoration: none;
+		transition: all 0.2s ease;
+	}
+	html.dark .nav-card { background-color: #121212; }
+
+	.nav-card.next { 
+		align-items: flex-end; 
+		text-align: right; 
+	}
+
+	.nav-label { 
+		font-size: 0.85rem; 
+		font-weight: 600;
+		color: var(--text-color); 
+		margin-bottom: 6px; 
+		text-transform: uppercase; 
+		font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+		letter-spacing: 0.05em; 
+		transition: color 0.2s ease;
+	}
+
+	.nav-title { 
+		font-size: 0.85rem; 
+		font-weight: 400; 
+		color: var(--text-muted); 
+		line-height: 1.5; 
+		display: -webkit-box;
+		-webkit-line-clamp: 2; /* 限制最多显示两行，长标题自动省略号，防止撑破卡片 */
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		transition: color 0.2s ease;
+	}
+
+	/* 正常状态下的鼠标悬浮效果 */
+	.nav-card:not(.disabled):hover {
+		border-color: var(--accent-color);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+	}
+	html.dark .nav-card:not(.disabled):hover { box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+	.nav-card:not(.disabled):hover .nav-label,
+	.nav-card:not(.disabled):hover .nav-title { color: var(--accent-color); }
+
+	/* 置灰状态（没有上一篇/下一篇） */
+	.nav-card.disabled {
+		opacity: 0.6;
+		cursor: default;
+		background-color: transparent;
+		border: 1px dashed var(--border-color);
+	}
+	.nav-card.disabled .nav-label,
+	.nav-card.disabled .nav-title { 
+		color: var(--text-muted); 
+		font-weight: 400; 
+	}
+</style>

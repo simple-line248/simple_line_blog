@@ -1,0 +1,72 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="关于我 | SimpleLine's Blog">
+	<header class="page-header">
+		<h1 class="page-title">About Me</h1>
+		<p class="page-subtitle">一个随便记点什么的网络笔记本。</p>
+	</header>
+
+	<article class="prose">
+		<p>你好，我是 SimpleLine。</p>
+		<p>目前是中国科学技术大学 (USTC) 数学系的一名学生。建这个极简的博客，主要是想在网上有个属于自己的安静角落，安放一些随想和记录，所以在这是匿名的状态。</p>
+		
+		<h3>这里会写点什么？</h3>
+		<p>虽然平时学的是数学，但我的兴趣点挺杂的。这个博客大概会是个“大杂烩”，什么都有可能往上放：</p>
+		<ul>
+			<li>各类的读书笔记和思考。</li>
+			<li>平时学习、写代码或者折腾各种新东西时的踩坑记录。</li>
+			<li>一些零碎的日常生活，以及各种乱七八糟的随笔。</li>
+		</ul>
+		<p>这里没有特别宏大或严肃的主题，主要用来当成一个对我自己公开的云端笔记本。</p>
+		
+		<p>很高兴你能顺着网线逛到这里。如果哪篇文章刚好帮到了你，或者让你觉得有点意思，随时欢迎通过侧边栏的邮箱发邮件找我聊聊天。</p>
+	</article>
+</Layout>
+
+<style>
+	.page-header {
+		margin-bottom: 48px;
+	}
+
+	.page-title {
+		font-size: 2rem;
+		font-weight: 600;
+		margin: 0 0 8px 0;
+		letter-spacing: 0.5px;
+	}
+
+	.page-subtitle {
+		font-size: 1rem;
+		color: var(--text-muted);
+		margin: 0;
+	}
+
+	.prose {
+		font-size: 1.05rem;
+		line-height: 1.8;
+		color: var(--text-color);
+		max-width: 680px;
+	}
+
+	.prose p {
+		margin-bottom: 20px;
+	}
+
+	.prose h3 {
+		font-size: 1.3rem;
+		font-weight: 500;
+		margin: 40px 0 16px 0;
+		color: var(--text-color);
+	}
+
+	.prose ul {
+		margin: 0 0 20px 0;
+		padding-left: 20px;
+	}
+
+	.prose li {
+		margin-bottom: 10px;
+	}
+</style>

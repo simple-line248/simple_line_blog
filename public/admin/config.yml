@@ -1,0 +1,39 @@
+backend:
+  name: github
+  # 注意：这里需要替换成你的真实 GitHub 仓库名 (格式: 用户名/仓库名)
+  repo: simple-line248/simple_line_blog 
+  branch: main
+
+# 图片处理中心
+media_folder: "src/assets"
+public_folder: "/src/assets"
+
+collections:
+  # 集装箱 1：博客文章
+  - name: "blog"
+    label: "文章 (Blog)"
+    folder: "src/pages/blog"
+    create: true
+    delete: true # 开启后台直接删除文章的权限
+    fields:
+      # 这个隐藏字段会自动把你的 Astro 布局注入进去，你在后台写文章不用管它
+      - { label: "布局模板", name: "layout", widget: "hidden", default: "../../layouts/PostLayout.astro" }
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "发布时间", name: "date", widget: "datetime", format: "YYYY-MM-DD" }
+      - { label: "描述", name: "description", widget: "text", required: false }
+      - { label: "标签", name: "tags", widget: "list", required: false }
+      - { label: "封面图", name: "cover", widget: "image", required: false }
+      - { label: "正文", name: "body", widget: "markdown" }
+
+  # 集装箱 2：你的项目
+  - name: "projects"
+    label: "项目 (Projects)"
+    folder: "src/projects"
+    create: true
+    delete: true # 开启后台直接删除项目的权限
+    fields:
+      - { label: "项目名称", name: "title", widget: "string" }
+      - { label: "简述", name: "description", widget: "text" }
+      - { label: "跳转链接", name: "url", widget: "string" }
+      - { label: "发布时间", name: "date", widget: "datetime", format: "YYYY-MM-DD" }
+      - { label: "详细说明", name: "body", widget: "markdown", required: false }
