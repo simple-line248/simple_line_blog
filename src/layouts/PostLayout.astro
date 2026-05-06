@@ -15,7 +15,12 @@ interface Props {
 const { title, frontmatter, headings = [] } = Astro.props;
 /* 如果有 frontmatter（通过 Markdown 传入），优先使用 frontmatter.title */
 const pageTitle = frontmatter?.title || title || "阅读文章";
-const publishDate = frontmatter?.date;
+
+// 修复时间格式：Astro 默认会将 Markdown 里的日期解析成 ISO 字符串，这里截取成 YYYY-MM-DD
+const publishDate = frontmatter?.date 
+	? new Date(frontmatter.date).toISOString().split('T')[0] 
+	: undefined;
+
 const description = frontmatter?.description;
 const tags = frontmatter?.tags || [];
 const toc = headings.filter(h => h.depth > 1 && h.depth <= 3);
