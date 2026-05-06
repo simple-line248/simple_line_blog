@@ -3,10 +3,10 @@ import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax';
 
 export default defineConfig({
-  // 你的 GitHub Pages 网址
-  site: 'https://simple-line248.github.io', 
-  // 如果你的仓库名叫 "my-repo"，则取消下面这行的注释并填入仓库名
-   base: '/simple_line_blog', 
+  // 你的自定义独立域名
+  site: 'https://simpleline.ink', 
+  // 绑定独立域名后，不需要 base 子路径了，必须注释或删除！
+  // base: '/simple_line_blog', 
   devToolbar: {
     enabled: false
   },
