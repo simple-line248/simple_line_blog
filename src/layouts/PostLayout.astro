@@ -40,6 +40,8 @@ const prevPost = currentIndex !== -1 && currentIndex < allPosts.length - 1 ? all
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{pageTitle}</title>
+		<!-- 引入 KaTeX 样式文件，用于正确渲染数学公式 -->
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsEw0928230nTFVn12kReQkWeB108Krt5NhrB5hP16qEoQ/gEocI7JxaRM" crossorigin="anonymous">
 	</head>
 	<body>
 		<div class="reading-wrapper">
