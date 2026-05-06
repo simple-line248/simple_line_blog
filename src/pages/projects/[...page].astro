@@ -1,11 +1,16 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from '../../layouts/Layout.astro';
 
-// 通过 Vite 批量导入 src/projects/ 下的所有 Markdown 文件
-const projectFiles = Object.values(import.meta.glob('../projects/*.md', { eager: true }));
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+	const projectFiles = Object.values(import.meta.glob('../../projects/*.md', { eager: true }));
+	// 按照日期进行降序排序 (让最新的项目排在最上面)
+	projectFiles.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
+	
+	// 设置每页显示 10 个项目
+	return paginate(projectFiles, { pageSize: 10 });
+}
 
-// 按照日期进行降序排序 (让最新的项目排在最上面)
-projectFiles.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
+const { page } = Astro.props as { page: any };
 ---
 
 <Layout title="项目 | My Space">
@@ -15,7 +20,7 @@ projectFiles.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - n
 </header>
 
 <section class="feed">
-{projectFiles.map((project: any) => (
+{page.data.map((project: any) => (
 <article class="project-item">
 <div class="project-content">
 <h2 class="project-title">
@@ -35,9 +40,47 @@ projectFiles.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - n
 </article>
 ))}
 </section>
+
+	<nav class="pagination">
+		{page.url.prev ? <a href={page.url.prev} class="page-link">&laquo; 上一页</a> : <span class="page-link disabled">&laquo; 上一页</span>}
+		<span class="page-info">{page.currentPage} / {page.lastPage}</span>
+		{page.url.next ? <a href={page.url.next} class="page-link">下一页 &raquo;</a> : <span class="page-link disabled">下一页 &raquo;</span>}
+	</nav>
 </Layout>
 
 <style>
+	.pagination {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 48px;
+		padding-top: 24px;
+		border-top: 1px solid var(--border-color);
+	}
+
+	.page-link {
+		padding: 8px 16px;
+		background: var(--element-bg);
+		color: var(--text-color);
+		border-radius: 6px;
+		font-size: 0.9rem;
+		text-decoration: none;
+		transition: background 0.2s ease;
+	}
+
+	.page-link:hover:not(.disabled) {
+		background: var(--element-hover);
+	}
+
+	.page-link.disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		color: var(--text-muted);
+		font-size: 0.9rem;
+	}
 .page-header {
 margin-bottom: 48px;
 }

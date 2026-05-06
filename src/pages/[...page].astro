@@ -2,14 +2,19 @@
 import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 
-// 使用 Vite 原生的高效导入方式替代已被新版废弃的 Astro.glob
-const posts = Object.values(import.meta.glob('./blog/*.md', { eager: true }));
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+	const posts = Object.values(import.meta.glob('./blog/*.md', { eager: true }));
+	// 按照日期进行降序排序
+	posts.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
+	
+	// 设置每页显示 5 篇文章
+	return paginate(posts, { pageSize: 5 });
+}
 
-// 方案B：通过 Vite 批量导入 src/assets/ 下的所有可能用作封面的图片（支持主流格式）
+const { page } = Astro.props as { page: any };
+
+// 通过 Vite 批量导入 src/assets/ 下的所有可能用作封面的图片（支持主流格式）
 const images = import.meta.glob<{ default: ImageMetadata }>('/src/assets/*.{jpeg,jpg,png,gif,webp}');
-
-// 按照日期进行降序排序
-posts.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date(a.frontmatter.date).valueOf());
 ---
 
 <Layout title="首页 | My Space">
@@ -19,7 +24,7 @@ posts.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date
 	</header>
 
 	<section class="feed">
-		{posts.map((post) => (
+		{page.data.map((post: any) => (
 			<article class="post-item">
 				<div class="post-thumbnail">
 					{(post as any).frontmatter.cover && images[(post as any).frontmatter.cover] ? (
@@ -53,9 +58,48 @@ posts.sort((a: any, b: any) => new Date(b.frontmatter.date).valueOf() - new Date
 			</article>
 		))}
 	</section>
+
+	<nav class="pagination">
+		{page.url.prev ? <a href={page.url.prev} class="page-link">&laquo; 上一页</a> : <span class="page-link disabled">&laquo; 上一页</span>}
+		<span class="page-info">{page.currentPage} / {page.lastPage}</span>
+		{page.url.next ? <a href={page.url.next} class="page-link">下一页 &raquo;</a> : <span class="page-link disabled">下一页 &raquo;</span>}
+	</nav>
 </Layout>
 
 <style>
+	.pagination {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 48px;
+		padding-top: 24px;
+		border-top: 1px solid var(--border-color);
+	}
+
+	.page-link {
+		padding: 8px 16px;
+		background: var(--element-bg);
+		color: var(--text-color);
+		border-radius: 6px;
+		font-size: 0.9rem;
+		text-decoration: none;
+		transition: background 0.2s ease;
+	}
+
+	.page-link:hover:not(.disabled) {
+		background: var(--element-hover);
+	}
+
+	.page-link.disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		color: var(--text-muted);
+		font-size: 0.9rem;
+	}
+
 	.page-header {
 		margin-bottom: 48px;
 	}
