@@ -7,7 +7,7 @@ tags:
   - AI
   - 数学
   - 算法
-cover: /src/assets/Screenshot 2026-05-06 212249.png
+cover: /src/assets/Screenshot 2026-05-06 212545.png
 ---
 
 最近大模型（LLM）的发展如火如荼，涌现能力、注意力机制、思维链等新概念层出不穷，仿佛计算机真正拥有了自主的灵魂。
