@@ -35,11 +35,11 @@ const pathname = Astro.url.pathname;
 							<span class="cn">文章</span>
 							<span class="en">Writing</span>
 						</a>
-						<a href={`${import.meta.env.BASE_URL}projects`} class={pathname.includes("/projects") ? "active" : ""}>
+						<a href={`${import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL}/projects`} class={pathname.includes("/projects") ? "active" : ""}>
 							<span class="cn">项目</span>
 							<span class="en">Projects</span>
 						</a>
-						<a href={`${import.meta.env.BASE_URL}about`} class={pathname.includes("/about") ? "active" : ""}>
+						<a href={`${import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL}/about`} class={pathname.includes("/about") ? "active" : ""}>
 							<span class="cn">履历</span>
 							<span class="en">About</span>
 						</a>
