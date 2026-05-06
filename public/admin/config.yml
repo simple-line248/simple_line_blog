@@ -3,7 +3,7 @@ backend:
   # 注意：这里需要替换成你的真实 GitHub 仓库名 (格式: 用户名/仓库名)
   repo: simple-line248/simple_line_blog 
   branch: main
-  app_id: Ov23li7VfHyu2qrkmvqh # 启用 PKCE 前端魔法鉴权
+  app_id: Ov23li7VfHyu2qrkmvqh # 启用 PKCE 前端魔法鉴权 （换成你自己的 App ID）
 
 # 图片处理中心
 media_folder: "src/assets"
